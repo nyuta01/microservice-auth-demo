@@ -133,7 +133,7 @@ cp .env.example .env
 ### 2. Start Databases
 
 ```bash
-docker-compose up -d
+docker-compose up
 ```
 
 ### 3. Install Dependencies
