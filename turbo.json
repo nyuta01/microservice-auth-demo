@@ -1,6 +1,6 @@
 {
   "$schema": "https://turborepo.com/schema.json",
-  "ui": "tui",
+  "ui": "stream",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -15,7 +15,73 @@
     },
     "dev": {
       "cache": false,
+      "persistent": true,
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "env": [
+        "DATABASE_URL_AUTH",
+        "DATABASE_URL_AUTHZ",
+        "DATABASE_URL_TASK",
+        "DATABASE_URL_DOCUMENT",
+        "DATABASE_URL_SCHEDULE",
+        "DATABASE_URL_SYSTEM_ADMIN",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "INTERNAL_API_SECRET",
+        "SERVICE_URL_AUTH",
+        "SERVICE_URL_AUTHZ",
+        "SERVICE_URL_TASK_API",
+        "SERVICE_URL_DOCUMENT_API",
+        "SERVICE_URL_SCHEDULE_API",
+        "SERVICE_URL_CONSOLE_API",
+        "SERVICE_URL_SYSTEM_ADMIN_API",
+        "NEXT_PUBLIC_AUTH_URL",
+        "NEXT_PUBLIC_TASK_API_URL",
+        "NEXT_PUBLIC_DOCUMENT_API_URL",
+        "NEXT_PUBLIC_SCHEDULE_API_URL",
+        "NEXT_PUBLIC_CONSOLE_API_URL",
+        "NEXT_PUBLIC_SYSTEM_ADMIN_API_URL",
+        "DEMO_WORKSPACE_ID"
+      ]
+    },
+    "db:generate": {
+      "cache": false,
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "env": [
+        "DATABASE_URL_AUTH",
+        "DATABASE_URL_AUTHZ",
+        "DATABASE_URL_TASK",
+        "DATABASE_URL_DOCUMENT",
+        "DATABASE_URL_SCHEDULE",
+        "DATABASE_URL_SYSTEM_ADMIN"
+      ]
+    },
+    "db:migrate": {
+      "cache": false,
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "env": [
+        "DATABASE_URL_AUTH",
+        "DATABASE_URL_AUTHZ",
+        "DATABASE_URL_TASK",
+        "DATABASE_URL_DOCUMENT",
+        "DATABASE_URL_SCHEDULE",
+        "DATABASE_URL_SYSTEM_ADMIN"
+      ]
+    },
+    "db:studio": {
+      "cache": false,
       "persistent": true
+    },
+    "db:seed": {
+      "cache": false,
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "env": [
+        "DATABASE_URL_AUTH",
+        "DATABASE_URL_AUTHZ",
+        "DATABASE_URL_TASK",
+        "DATABASE_URL_DOCUMENT",
+        "DEMO_ORG_ID",
+        "DEMO_WORKSPACE_ID"
+      ]
     }
   }
 }

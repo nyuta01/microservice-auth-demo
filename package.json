@@ -3,18 +3,35 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "dotenv -e .env -- turbo run dev --parallel --filter='./apps/authn-api' --filter='./apps/authz-api' --filter='./apps/task-api' --filter='./apps/task-web' --filter='./apps/document-api' --filter='./apps/document-web' --filter='./apps/console-api' --filter='./apps/console-web' --filter='./apps/system-admin-api' --filter='./apps/system-admin-web'",
     "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "lint:biome": "biome check .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "check-types": "turbo run check-types",
+    "db:generate": "dotenv -e .env -- turbo run db:generate",
+    "db:migrate": "dotenv -e .env -- turbo run db:migrate",
+    "db:studio": "dotenv -e .env -- turbo run db:studio",
+    "db:seed": "dotenv -e .env -- tsx scripts/seed-all.ts",
+    "auth:migrate": "dotenv -e .env -- sh -c 'cd apps/authn-api && pnpm dlx @better-auth/cli migrate'",
+    "auth:generate": "dotenv -e .env -- sh -c 'cd apps/authn-api && pnpm dlx @better-auth/cli generate'"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.3.8",
+    "@types/node": "^20.0.0",
+    "dotenv-cli": "^7.4.2",
     "prettier": "^3.7.4",
+    "tsx": "^4.7.0",
     "turbo": "^2.6.3",
     "typescript": "5.9.2"
   },
   "packageManager": "pnpm@9.0.0",
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "@hono/swagger-ui": "^0.5.2",
+    "@hono/zod-openapi": "^1.1.5",
+    "zod": "^4.1.13"
   }
 }

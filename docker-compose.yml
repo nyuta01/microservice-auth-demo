@@ -1,0 +1,121 @@
+version: '3.8'
+
+services:
+  # ------------------------------------------------
+  # Core Services DB
+  # ------------------------------------------------
+  db-auth:
+    image: postgres:15-alpine
+    container_name: db-auth
+    ports:
+      - "6000:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: auth_db
+    volumes:
+      - pgdata_auth:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d auth_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  db-authz:
+    image: postgres:15-alpine
+    container_name: db-authz
+    ports:
+      - "6001:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: authz_db
+    volumes:
+      - pgdata_authz:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d authz_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ------------------------------------------------
+  # Business Services DB
+  # ------------------------------------------------
+  db-task:
+    image: postgres:15-alpine
+    container_name: db-task
+    ports:
+      - "6010:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: task_db
+    volumes:
+      - pgdata_task:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d task_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  db-document:
+    image: postgres:15-alpine
+    container_name: db-document
+    ports:
+      - "6011:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: document_db
+    volumes:
+      - pgdata_document:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d document_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  db-schedule:
+    image: postgres:15-alpine
+    container_name: db-schedule
+    ports:
+      - "6012:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: schedule_db
+    volumes:
+      - pgdata_schedule:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d schedule_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ------------------------------------------------
+  # Admin Services DB
+  # ------------------------------------------------
+  db-system-admin:
+    image: postgres:15-alpine
+    container_name: db-system-admin
+    ports:
+      - "6021:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: system_admin_db
+    volumes:
+      - pgdata_system_admin:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d system_admin_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata_auth:
+  pgdata_authz:
+  pgdata_task:
+  pgdata_document:
+  pgdata_schedule:
+  pgdata_system_admin:

@@ -1,135 +1,198 @@
-# Turborepo starter
+# Microservice Auth Demo
 
-This Turborepo starter is maintained by the Turborepo core team.
+A demo project implementing **shared authentication and authorization** across multiple microservices.
 
-## Using this example
+## Overview
 
-Run the following command:
+Multiple services (Task Management, Document Management, etc.) share a **single Authentication service (AuthN)** and a **single Authorization service (AuthZ)**, enabling:
 
-```sh
-npx create-turbo@latest
-```
-
-## What's inside?
-
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
+- Shared authentication - all services use the same AuthN API and session
+- Centralized Organization/Workspace-based permission management
+- Business services delegate auth logic to AuthN/AuthZ APIs (no auth code in each service)
 
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+┌─────────────────────────────────────────────────────────────────┐
+│                        Web Applications                         │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐             │
+│  │  Task Web   │  │Document Web │  │ Console Web │  ...        │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘             │
+└─────────┼────────────────┼────────────────┼─────────────────────┘
+          │                │                │
+          │  JWT Token     │  JWT Token     │  JWT Token
+          ▼                ▼                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                        API Services                             │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐             │
+│  │  Task API   │  │Document API │  │ Console API │  ...        │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘             │
+└─────────┼────────────────┼────────────────┼─────────────────────┘
+          │                │                │
+          │ Verify Token   │ Check Permission│
+          ▼                ▼                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     Core Services                               │
+│  ┌────────────────────────┐  ┌────────────────────────┐        │
+│  │    AuthN API (10000)   │  │    AuthZ API (10001)   │        │
+│  │                        │  │                        │        │
+│  │  - better-auth         │  │  - Organization mgmt   │        │
+│  │  - User authentication │  │  - Workspace mgmt      │        │
+│  │  - Session management  │  │  - Membership          │        │
+│  │  - JWT issuance        │  │  - Role management     │        │
+│  └────────────────────────┘  └────────────────────────┘        │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## Authentication Flow (AuthN)
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+Uses [better-auth](https://www.better-auth.com/) to provide a shared authentication layer for all services.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+1. User logs in via any Web app
+2. AuthN API creates a session and issues a JWT
+3. Web apps fetch the JWT from AuthN API
+4. API services verify the JWT to identify the user
 
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+```typescript
+// JWT verification in each API service (shared middleware)
+app.use("*", verifyJwt(process.env.AUTH_SECRET!));
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## Authorization Flow (AuthZ)
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+AuthZ API centrally manages Organization/Workspace permissions.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+1. API service receives a request
+2. Extract user ID from JWT
+3. Query AuthZ API: "What can this user do in this Workspace?"
+4. Allow or deny access based on permissions
 
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+```typescript
+// Permission check via AuthZ API
+const { allowed } = await authzClient.authorize({
+  userId: "user-123",
+  workspaceId: "ws-456",
+  action: "task:create"
+});
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+## Role System
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+### System Role (user.role)
+Managed in AuthN API. System-wide privilege level.
 
+| Role | Description |
+|------|-------------|
+| `admin` | System administrator (can access all Organizations/Workspaces) |
+| `user` / `null` | Regular user (permissions via Organization/Workspace membership) |
+
+### Organization Roles
+Managed in AuthZ API. Permissions within an Organization.
+
+| Role | Description |
+|------|-------------|
+| `org:owner` | Owner (full permissions) |
+| `org:admin` | Admin (can manage members and Workspaces) |
+| `org:member` | Member (Workspace access only) |
+
+### Workspace Roles
+Managed in AuthZ API. Permissions within a Workspace.
+
+| Role | Description |
+|------|-------------|
+| `workspace:admin` | Admin (full permissions) |
+| `workspace:member` | Member (read/write) |
+| `workspace:viewer` | Viewer (read only) |
+
+## Service Architecture
+
+### Core Services (Auth Infrastructure)
+| Service | Port | Description |
+|---------|------|-------------|
+| AuthN API | 10000 | Authentication & JWT issuance via better-auth |
+| AuthZ API | 10001 | Organization/Workspace permission management |
+
+### Business Services
+| Service | API | Web | Description |
+|---------|-----|-----|-------------|
+| Task | 10100 | 20100 | Task management |
+| Document | 10101 | 20101 | Document management |
+
+### Admin Services
+| Service | API | Web | Description |
+|---------|-----|-----|-------------|
+| Console | 10200 | 20200 | Organization/Workspace management (for org:admin) |
+| System Admin | 10201 | 20201 | System-wide management (for admin) |
+
+## Setup
+
+### 1. Environment Variables
+
+```bash
+cp .env.example .env
 ```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
+### 2. Start Databases
+
+```bash
+docker-compose up -d
 ```
 
-## Useful Links
+### 3. Install Dependencies
 
-Learn more about the power of Turborepo:
+```bash
+pnpm install
+```
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+### 4. Run Migrations
+
+```bash
+pnpm db:generate
+pnpm db:migrate
+```
+
+### 5. Seed Data
+
+```bash
+pnpm db:seed
+```
+
+### 6. Start Dev Server
+
+```bash
+pnpm dev
+```
+
+## Demo Users
+
+All passwords are `password`.
+
+| Email | Role | Description |
+|-------|------|-------------|
+| `super-admin@example.com` | admin | System administrator |
+| `org-owner-1@example.com` | org:owner | Acme Corporation owner |
+| `org-admin-1@example.com` | org:admin | Acme Corporation admin |
+| `ws-member-1@example.com` | org:member | Acme Corporation member |
+
+## Verification
+
+1. **Task Web** (http://localhost:20100) - Task management app
+2. **Document Web** (http://localhost:20101) - Document management app
+3. **Console Web** (http://localhost:20200) - Organization management
+4. **System Admin Web** (http://localhost:20201) - System administration
+
+## Tech Stack
+
+| Category | Technology |
+|----------|------------|
+| Authentication | better-auth (JWT Plugin) |
+| Backend | Hono |
+| Frontend | Next.js (App Router) |
+| Database | PostgreSQL + Drizzle ORM |
+| Styling | Tailwind CSS + shadcn/ui |
+| Monorepo | Turborepo + pnpm |
+
+## Documentation
+
+- [Architecture Design](./docs/architecture.md) - System architecture
+- [Role Design](./docs/role-design.md) - Role system details
+- [Permission Design](./docs/permission-design.md) - Permission system details
+- [Port Assignment](./docs/port-assignment.md) - Port numbering rules
