@@ -1,22 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  type AuthorizationRepository,
-  type AuthorizationRequest,
-  AuthorizationUseCase,
-} from "./authorization";
+import { type AuthorizationRepository, AuthorizationUseCase } from "./authorization";
 
 /**
  * Relationship between roles and permissions (from seed.ts)
  *
  * Organization roles:
  *   - org:owner  → org:manage, org:users, org:workspaces, org:settings
- *   - org:admin  → org:manage, org:users, org:workspaces, org:settings
  *   - org:member → No organization-level permissions (access only as Workspace member)
  *
  * Workspace roles:
- *   - workspace:admin  → workspace:admin, workspace:task:*, workspace:document:*, workspace:schedule:*
- *   - workspace:member → workspace:task:read/write, workspace:document:read/write, workspace:schedule:read/write
- *   - workspace:viewer → workspace:task:read, workspace:document:read, workspace:schedule:read
+ *   - workspace:owner  → full access (read, create, update:all, delete:all)
+ *   - workspace:member → read, create, update:own, delete:own (own resources only)
+ *   - workspace:viewer → read only
  */
 
 // Test constants
@@ -27,28 +22,47 @@ const WORKSPACE_ID = "workspace-789";
 // Role-permission mapping (same as actual seed.ts)
 const ROLE_PERMISSIONS: Record<string, string[]> = {
   "org:owner": ["org:manage", "org:users", "org:workspaces", "org:settings"],
-  "org:admin": ["org:manage", "org:users", "org:workspaces", "org:settings"],
   "org:member": [], // No organization-level permissions (access only as Workspace member)
-  "workspace:admin": [
-    "workspace:admin",
+  "workspace:owner": [
+    "workspace:owner",
+    // Task permissions
     "workspace:task:read",
-    "workspace:task:write",
-    "workspace:task:delete",
-    "workspace:task:assign",
+    "workspace:task:create",
+    "workspace:task:update:own",
+    "workspace:task:update:all",
+    "workspace:task:delete:own",
+    "workspace:task:delete:all",
+    // Document permissions
     "workspace:document:read",
-    "workspace:document:write",
-    "workspace:document:delete",
+    "workspace:document:create",
+    "workspace:document:update:own",
+    "workspace:document:update:all",
+    "workspace:document:delete:own",
+    "workspace:document:delete:all",
+    // Schedule permissions
     "workspace:schedule:read",
-    "workspace:schedule:write",
-    "workspace:schedule:delete",
+    "workspace:schedule:create",
+    "workspace:schedule:update:own",
+    "workspace:schedule:update:all",
+    "workspace:schedule:delete:own",
+    "workspace:schedule:delete:all",
   ],
   "workspace:member": [
+    // Task permissions (own resources only for update/delete)
     "workspace:task:read",
-    "workspace:task:write",
+    "workspace:task:create",
+    "workspace:task:update:own",
+    "workspace:task:delete:own",
+    // Document permissions (own resources only for update/delete)
     "workspace:document:read",
-    "workspace:document:write",
+    "workspace:document:create",
+    "workspace:document:update:own",
+    "workspace:document:delete:own",
+    // Schedule permissions (own resources only for update/delete)
     "workspace:schedule:read",
-    "workspace:schedule:write",
+    "workspace:schedule:create",
+    "workspace:schedule:update:own",
+    "workspace:schedule:delete:own",
   ],
   "workspace:viewer": [
     "workspace:task:read",
@@ -144,23 +158,6 @@ describe("AuthorizationUseCase", () => {
       );
     });
 
-    describe("org:admin role", () => {
-      const repository = createMockRepository({ orgMemberRole: "org:admin" });
-      const useCase = new AuthorizationUseCase(repository);
-
-      it.each(["org:manage", "org:users", "org:workspaces", "org:settings"])(
-        "has %s permission",
-        async (permission) => {
-          const result = await useCase.execute({
-            userId: USER_ID,
-            organizationId: ORG_ID,
-            permission,
-          });
-          expect(result.allowed).toBe(true);
-        }
-      );
-    });
-
     describe("org:member role", () => {
       const repository = createMockRepository({ orgMemberRole: "org:member" });
       const useCase = new AuthorizationUseCase(repository);
@@ -228,22 +225,6 @@ describe("AuthorizationUseCase", () => {
         expect(result.allowed).toBe(true);
       });
 
-      it("org:admin can access all Workspaces", async () => {
-        const repository = createMockRepository({
-          orgMemberRole: "org:admin",
-          workspaceMemberRole: null,
-        });
-        const useCase = new AuthorizationUseCase(repository);
-
-        const result = await useCase.execute({
-          userId: USER_ID,
-          workspaceId: WORKSPACE_ID,
-          permission: "workspace:document:write",
-        });
-
-        expect(result.allowed).toBe(true);
-      });
-
       it("org:member cannot access Workspace unless they are a Workspace member", async () => {
         const repository = createMockRepository({
           orgMemberRole: "org:member",
@@ -261,21 +242,23 @@ describe("AuthorizationUseCase", () => {
       });
     });
 
-    describe("workspace:admin role", () => {
-      const repository = createMockRepository({ workspaceMemberRole: "workspace:admin" });
+    describe("workspace:owner role", () => {
+      const repository = createMockRepository({ workspaceMemberRole: "workspace:owner" });
       const useCase = new AuthorizationUseCase(repository);
 
       it.each([
         "workspace:task:read",
-        "workspace:task:write",
-        "workspace:task:delete",
-        "workspace:task:assign",
+        "workspace:task:create",
+        "workspace:task:update:own",
+        "workspace:task:update:all",
+        "workspace:task:delete:own",
+        "workspace:task:delete:all",
         "workspace:document:read",
-        "workspace:document:write",
-        "workspace:document:delete",
-        "workspace:schedule:read",
-        "workspace:schedule:write",
-        "workspace:schedule:delete",
+        "workspace:document:create",
+        "workspace:document:update:own",
+        "workspace:document:update:all",
+        "workspace:document:delete:own",
+        "workspace:document:delete:all",
       ])("has %s permission", async (permission) => {
         const result = await useCase.execute({
           userId: USER_ID,
@@ -292,11 +275,13 @@ describe("AuthorizationUseCase", () => {
 
       it.each([
         "workspace:task:read",
-        "workspace:task:write",
+        "workspace:task:create",
+        "workspace:task:update:own",
+        "workspace:task:delete:own",
         "workspace:document:read",
-        "workspace:document:write",
-        "workspace:schedule:read",
-        "workspace:schedule:write",
+        "workspace:document:create",
+        "workspace:document:update:own",
+        "workspace:document:delete:own",
       ])("has %s permission", async (permission) => {
         const result = await useCase.execute({
           userId: USER_ID,
@@ -307,11 +292,11 @@ describe("AuthorizationUseCase", () => {
       });
 
       it.each([
-        "workspace:task:delete",
-        "workspace:task:assign",
-        "workspace:document:delete",
-        "workspace:schedule:delete",
-      ])("does not have %s permission", async (permission) => {
+        "workspace:task:update:all",
+        "workspace:task:delete:all",
+        "workspace:document:update:all",
+        "workspace:document:delete:all",
+      ])("does not have %s permission (no :all access)", async (permission) => {
         const result = await useCase.execute({
           userId: USER_ID,
           workspaceId: WORKSPACE_ID,
@@ -338,12 +323,12 @@ describe("AuthorizationUseCase", () => {
       );
 
       it.each([
-        "workspace:task:write",
-        "workspace:task:delete",
-        "workspace:document:write",
-        "workspace:document:delete",
-        "workspace:schedule:write",
-        "workspace:schedule:delete",
+        "workspace:task:create",
+        "workspace:task:update:own",
+        "workspace:task:delete:own",
+        "workspace:document:create",
+        "workspace:document:update:own",
+        "workspace:document:delete:own",
       ])("does not have %s permission (no write access)", async (permission) => {
         const result = await useCase.execute({
           userId: USER_ID,
@@ -351,6 +336,35 @@ describe("AuthorizationUseCase", () => {
           permission,
         });
         expect(result.allowed).toBe(false);
+      });
+    });
+
+    describe(":own/:all permission logic", () => {
+      it("admin with :all permission is allowed for :own permission request", async () => {
+        const repository = createMockRepository({ workspaceMemberRole: "workspace:owner" });
+        const useCase = new AuthorizationUseCase(repository);
+
+        // When requesting :own permission, admin should be allowed because they have :all
+        const result = await useCase.execute({
+          userId: USER_ID,
+          workspaceId: WORKSPACE_ID,
+          permission: "workspace:task:update:own",
+        });
+        expect(result.allowed).toBe(true);
+      });
+
+      it("member with :own permission is allowed (ownership check is done by business service)", async () => {
+        const repository = createMockRepository({ workspaceMemberRole: "workspace:member" });
+        const useCase = new AuthorizationUseCase(repository);
+
+        // AuthZ only checks if user has the permission
+        // Business service is responsible for ownership verification
+        const result = await useCase.execute({
+          userId: USER_ID,
+          workspaceId: WORKSPACE_ID,
+          permission: "workspace:task:update:own",
+        });
+        expect(result.allowed).toBe(true);
       });
     });
   });

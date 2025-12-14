@@ -39,9 +39,8 @@ async function seed() {
   // 1. Roles
   const rolesData = [
     { id: "org:owner", name: "Organization Owner" },
-    { id: "org:admin", name: "Organization Administrator" },
     { id: "org:member", name: "Organization Member" },
-    { id: "workspace:admin", name: "Workspace Administrator" },
+    { id: "workspace:owner", name: "Workspace Owner" },
     { id: "workspace:member", name: "Workspace Member" },
     { id: "workspace:viewer", name: "Workspace Viewer" },
   ];
@@ -50,24 +49,34 @@ async function seed() {
   console.log(`[OK] Roles: ${rolesData.length} records`);
 
   // 2. Permissions
+  // Permission naming: workspace:{resource}:{action}
+  // Actions: read, create, update:own, update:all, delete:own, delete:all
+  // :own = only own resources, :all = all resources
   const permissionsData = [
-    { id: "workspace:task:read", description: "Read tasks" },
-    { id: "workspace:task:write", description: "Create and update tasks" },
-    { id: "workspace:task:delete", description: "Delete tasks" },
-    { id: "workspace:task:assign", description: "Assign tasks" },
-    { id: "workspace:document:read", description: "Read documents" },
-    {
-      id: "workspace:document:write",
-      description: "Create and update documents",
-    },
-    { id: "workspace:document:delete", description: "Delete documents" },
-    { id: "workspace:schedule:read", description: "Read schedules" },
-    {
-      id: "workspace:schedule:write",
-      description: "Create and update schedules",
-    },
-    { id: "workspace:schedule:delete", description: "Delete schedules" },
-    { id: "workspace:admin", description: "Workspace administration" },
+    // Task management
+    { id: "workspace:task:read", description: "Read all tasks" },
+    { id: "workspace:task:create", description: "Create tasks" },
+    { id: "workspace:task:update:own", description: "Update own tasks" },
+    { id: "workspace:task:update:all", description: "Update all tasks" },
+    { id: "workspace:task:delete:own", description: "Delete own tasks" },
+    { id: "workspace:task:delete:all", description: "Delete all tasks" },
+    // Document management
+    { id: "workspace:document:read", description: "Read all documents" },
+    { id: "workspace:document:create", description: "Create documents" },
+    { id: "workspace:document:update:own", description: "Update own documents" },
+    { id: "workspace:document:update:all", description: "Update all documents" },
+    { id: "workspace:document:delete:own", description: "Delete own documents" },
+    { id: "workspace:document:delete:all", description: "Delete all documents" },
+    // Schedule management
+    { id: "workspace:schedule:read", description: "Read all schedules" },
+    { id: "workspace:schedule:create", description: "Create schedules" },
+    { id: "workspace:schedule:update:own", description: "Update own schedules" },
+    { id: "workspace:schedule:update:all", description: "Update all schedules" },
+    { id: "workspace:schedule:delete:own", description: "Delete own schedules" },
+    { id: "workspace:schedule:delete:all", description: "Delete all schedules" },
+    // Workspace management
+    { id: "workspace:owner", description: "Workspace owner permission" },
+    // Organization management
     { id: "org:manage", description: "Manage organization" },
     { id: "org:users", description: "Manage users" },
     { id: "org:workspaces", description: "Manage workspaces" },
@@ -78,38 +87,60 @@ async function seed() {
   console.log(`[OK] Permissions: ${permissionsData.length} records`);
 
   // 3. Role-Permission mappings
+  // Permission matrix:
+  // - admin: read, create, update:all, delete:all (full access)
+  // - member: read, create, update:own, delete:own (own resources only)
+  // - viewer: read only
   const rolePermissionsData = [
-    // org:owner
+    // org:owner - full organization management permissions
     { roleId: "org:owner", permissionId: "org:manage" },
     { roleId: "org:owner", permissionId: "org:users" },
     { roleId: "org:owner", permissionId: "org:workspaces" },
     { roleId: "org:owner", permissionId: "org:settings" },
-    // org:admin
-    { roleId: "org:admin", permissionId: "org:manage" },
-    { roleId: "org:admin", permissionId: "org:users" },
-    { roleId: "org:admin", permissionId: "org:workspaces" },
-    { roleId: "org:admin", permissionId: "org:settings" },
     // org:member - no organization-level permissions (access only as workspace member)
-    // workspace:admin
-    { roleId: "workspace:admin", permissionId: "workspace:admin" },
-    { roleId: "workspace:admin", permissionId: "workspace:task:read" },
-    { roleId: "workspace:admin", permissionId: "workspace:task:write" },
-    { roleId: "workspace:admin", permissionId: "workspace:task:delete" },
-    { roleId: "workspace:admin", permissionId: "workspace:task:assign" },
-    { roleId: "workspace:admin", permissionId: "workspace:document:read" },
-    { roleId: "workspace:admin", permissionId: "workspace:document:write" },
-    { roleId: "workspace:admin", permissionId: "workspace:document:delete" },
-    { roleId: "workspace:admin", permissionId: "workspace:schedule:read" },
-    { roleId: "workspace:admin", permissionId: "workspace:schedule:write" },
-    { roleId: "workspace:admin", permissionId: "workspace:schedule:delete" },
-    // workspace:member
+
+    // workspace:owner - full access to all resources
+    { roleId: "workspace:owner", permissionId: "workspace:owner" },
+    // Task permissions (owner)
+    { roleId: "workspace:owner", permissionId: "workspace:task:read" },
+    { roleId: "workspace:owner", permissionId: "workspace:task:create" },
+    { roleId: "workspace:owner", permissionId: "workspace:task:update:own" },
+    { roleId: "workspace:owner", permissionId: "workspace:task:update:all" },
+    { roleId: "workspace:owner", permissionId: "workspace:task:delete:own" },
+    { roleId: "workspace:owner", permissionId: "workspace:task:delete:all" },
+    // Document permissions (owner)
+    { roleId: "workspace:owner", permissionId: "workspace:document:read" },
+    { roleId: "workspace:owner", permissionId: "workspace:document:create" },
+    { roleId: "workspace:owner", permissionId: "workspace:document:update:own" },
+    { roleId: "workspace:owner", permissionId: "workspace:document:update:all" },
+    { roleId: "workspace:owner", permissionId: "workspace:document:delete:own" },
+    { roleId: "workspace:owner", permissionId: "workspace:document:delete:all" },
+    // Schedule permissions (owner)
+    { roleId: "workspace:owner", permissionId: "workspace:schedule:read" },
+    { roleId: "workspace:owner", permissionId: "workspace:schedule:create" },
+    { roleId: "workspace:owner", permissionId: "workspace:schedule:update:own" },
+    { roleId: "workspace:owner", permissionId: "workspace:schedule:update:all" },
+    { roleId: "workspace:owner", permissionId: "workspace:schedule:delete:own" },
+    { roleId: "workspace:owner", permissionId: "workspace:schedule:delete:all" },
+
+    // workspace:member - can create/read all, update/delete own resources only
+    // Task permissions (member)
     { roleId: "workspace:member", permissionId: "workspace:task:read" },
-    { roleId: "workspace:member", permissionId: "workspace:task:write" },
+    { roleId: "workspace:member", permissionId: "workspace:task:create" },
+    { roleId: "workspace:member", permissionId: "workspace:task:update:own" },
+    { roleId: "workspace:member", permissionId: "workspace:task:delete:own" },
+    // Document permissions (member)
     { roleId: "workspace:member", permissionId: "workspace:document:read" },
-    { roleId: "workspace:member", permissionId: "workspace:document:write" },
+    { roleId: "workspace:member", permissionId: "workspace:document:create" },
+    { roleId: "workspace:member", permissionId: "workspace:document:update:own" },
+    { roleId: "workspace:member", permissionId: "workspace:document:delete:own" },
+    // Schedule permissions (member)
     { roleId: "workspace:member", permissionId: "workspace:schedule:read" },
-    { roleId: "workspace:member", permissionId: "workspace:schedule:write" },
-    // workspace:viewer
+    { roleId: "workspace:member", permissionId: "workspace:schedule:create" },
+    { roleId: "workspace:member", permissionId: "workspace:schedule:update:own" },
+    { roleId: "workspace:member", permissionId: "workspace:schedule:delete:own" },
+
+    // workspace:viewer - read only
     { roleId: "workspace:viewer", permissionId: "workspace:task:read" },
     { roleId: "workspace:viewer", permissionId: "workspace:document:read" },
     { roleId: "workspace:viewer", permissionId: "workspace:schedule:read" },

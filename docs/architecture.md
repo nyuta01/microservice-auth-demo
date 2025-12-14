@@ -92,12 +92,11 @@ User Role (user.role) - Managed in AuthN API
 
 Organization Role (organization_members) - Managed in AuthZ API
   ├── org:owner  → Has org:manage permission → Can use Console
-  ├── org:admin  → Has org:manage permission → Can use Console
   └── org:member → No org:manage permission → Cannot access Console
 
 Workspace Role (workspace_members) - Managed in AuthZ API
-  ├── workspace:admin  → Full permissions
-  ├── workspace:member → Read/write
+  ├── workspace:owner  → Full permissions
+  ├── workspace:member → Read/write own resources
   └── workspace:viewer → Read only
 ```
 

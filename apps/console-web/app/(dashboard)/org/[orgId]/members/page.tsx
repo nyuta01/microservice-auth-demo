@@ -35,12 +35,11 @@ interface MembersResponse {
 
 const ORG_ROLES = [
   { id: "org:owner", name: "Owner" },
-  { id: "org:admin", name: "Admin" },
   { id: "org:member", name: "Member" },
 ];
 
 const WORKSPACE_ROLES = [
-  { id: "workspace:admin", name: "Admin" },
+  { id: "workspace:owner", name: "Owner" },
   { id: "workspace:member", name: "Member" },
   { id: "workspace:viewer", name: "Viewer" },
 ];

@@ -89,8 +89,7 @@ Managed in AuthZ API. Permissions within an Organization.
 
 | Role | Description |
 |------|-------------|
-| `org:owner` | Owner (full permissions) |
-| `org:admin` | Admin (can manage members and Workspaces) |
+| `org:owner` | Owner (full permissions - can manage members and Workspaces) |
 | `org:member` | Member (Workspace access only) |
 
 ### Workspace Roles
@@ -98,8 +97,8 @@ Managed in AuthZ API. Permissions within a Workspace.
 
 | Role | Description |
 |------|-------------|
-| `workspace:admin` | Admin (full permissions) |
-| `workspace:member` | Member (read/write) |
+| `workspace:owner` | Owner (full permissions) |
+| `workspace:member` | Member (read/write own resources) |
 | `workspace:viewer` | Viewer (read only) |
 
 ## Service Architecture
@@ -119,7 +118,7 @@ Managed in AuthZ API. Permissions within a Workspace.
 ### Admin Services
 | Service | API | Web | Description |
 |---------|-----|-----|-------------|
-| Console | 10200 | 20200 | Organization/Workspace management (for org:admin) |
+| Console | 10200 | 20200 | Organization/Workspace management (for org:owner) |
 | System Admin | 10201 | 20201 | System-wide management (for admin) |
 
 ## Setup
@@ -175,9 +174,9 @@ All passwords are `password`.
 
 | Email | Name | Org Role | Workspace | Workspace Role |
 |-------|------|----------|-----------|----------------|
-| `org-owner-1@example.com` | Alice Johnson | org:owner | Engineering | workspace:admin |
-| | | | Marketing | workspace:admin |
-| `org-admin-1@example.com` | Bob Smith | org:admin | Engineering | workspace:admin |
+| `org-owner-1@example.com` | Alice Johnson | org:owner | Engineering | workspace:owner |
+| | | | Marketing | workspace:owner |
+| `org-owner-2@example.com` | Bob Smith | org:owner | Engineering | workspace:owner |
 | `ws-member-1@example.com` | Carol White | org:member | Engineering | workspace:member |
 | | | | Marketing | workspace:member |
 | `ws-viewer-1@example.com` | David Brown | org:member | Engineering | workspace:viewer |
@@ -186,14 +185,14 @@ All passwords are `password`.
 
 | Email | Name | Org Role | Workspace | Workspace Role |
 |-------|------|----------|-----------|----------------|
-| `org-admin-2@example.com` | Eve Davis | org:admin | Product | workspace:admin |
+| `org-owner-3@example.com` | Eve Davis | org:owner | Product | workspace:owner |
 
 ### Multi-Organization Users
 
 | Email | Name | Organization | Org Role | Workspace | Workspace Role |
 |-------|------|--------------|----------|-----------|----------------|
-| `multi-org-admin@example.com` | Frank Miller | Acme Corp | org:admin | Engineering | workspace:admin |
-| | | Global Tech | org:admin | Product | workspace:admin |
+| `multi-org-owner@example.com` | Frank Miller | Acme Corp | org:owner | Engineering | workspace:owner |
+| | | Global Tech | org:owner | Product | workspace:owner |
 | `multi-org-member@example.com` | Grace Lee | Acme Corp | org:member | Engineering | workspace:member |
 | | | | | Marketing | workspace:viewer |
 | | | Global Tech | org:member | Product | workspace:member |

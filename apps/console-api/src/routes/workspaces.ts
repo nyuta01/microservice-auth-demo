@@ -105,11 +105,11 @@ workspaces.put("/:id", async (c) => {
     throw new Error("Unauthorized");
   }
 
-  // Permission check: workspace:admin
+  // Permission check: workspace:owner
   const isAllowed = await checkPermission({
     userId: user.sub,
     workspaceId,
-    permission: "workspace:admin",
+    permission: "workspace:owner",
     token,
   });
 
@@ -138,11 +138,11 @@ workspaces.delete("/:id", async (c) => {
     throw new Error("Unauthorized");
   }
 
-  // Permission check: workspace:admin
+  // Permission check: workspace:owner
   const isAllowed = await checkPermission({
     userId: user.sub,
     workspaceId,
-    permission: "workspace:admin",
+    permission: "workspace:owner",
     token,
   });
 

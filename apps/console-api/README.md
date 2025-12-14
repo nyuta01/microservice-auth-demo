@@ -49,15 +49,15 @@ All endpoints require JWT authentication.
 |--------|------|-------------|---------------------|
 | GET | `/api/workspaces` | Get workspace list | - |
 | POST | `/api/workspaces` | Create workspace | org:workspaces |
-| PUT | `/api/workspaces/:id` | Update workspace | workspace:admin |
-| DELETE | `/api/workspaces/:id` | Delete workspace | workspace:admin |
+| PUT | `/api/workspaces/:id` | Update workspace | workspace:owner |
+| DELETE | `/api/workspaces/:id` | Delete workspace | workspace:owner |
 
 ### Member Management
 
 | Method | Path | Description | Required Permission |
 |--------|------|-------------|---------------------|
-| GET | `/api/members` | Get members list (header-based) | workspace:admin / org:users |
-| GET | `/api/members/workspace/:workspaceId` | Get workspace members list | workspace:admin |
+| GET | `/api/members` | Get members list (header-based) | workspace:owner / org:users |
+| GET | `/api/members/workspace/:workspaceId` | Get workspace members list | workspace:owner |
 | GET | `/api/members/organization/:organizationId` | Get organization members list | org:users |
 
 ### Dashboard

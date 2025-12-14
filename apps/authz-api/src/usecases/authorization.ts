@@ -89,6 +89,9 @@ export class AuthorizationUseCase {
 
   /**
    * Workspace-level permission check
+   *
+   * AuthZ API only checks if user has the permission.
+   * Ownership verification (for :own permissions) should be done by business services.
    */
   private async checkWorkspacePermission(
     request: AuthorizationRequest
@@ -121,9 +124,21 @@ export class AuthorizationUseCase {
       return { allowed: false, reason: "Insufficient permission" };
     }
 
+    // Check if user has the permission (direct check)
+    // For :own permissions, AuthZ only checks if user has the permission.
+    // Business service is responsible for verifying ownership.
     const hasPermission = await this.repository.hasRolePermission(member.roleId, permission);
     if (hasPermission) {
       return { allowed: true };
+    }
+
+    // For :own permissions, also check if user has :all permission (which implies :own)
+    if (permission.endsWith(":own")) {
+      const allPermission = permission.replace(/:own$/, ":all");
+      const hasAllPermission = await this.repository.hasRolePermission(member.roleId, allPermission);
+      if (hasAllPermission) {
+        return { allowed: true };
+      }
     }
 
     return { allowed: false, reason: "Insufficient permission" };

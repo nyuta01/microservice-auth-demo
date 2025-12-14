@@ -219,8 +219,8 @@ app.post("/api/system-admin/organizations/:id/members", async (c) => {
     throw new Error("userId and roleId are required");
   }
 
-  // Verify that roleId is valid (org:owner, org:admin, org:member)
-  const validRoles = ["org:owner", "org:admin", "org:member"];
+  // Verify that roleId is valid (org:owner, org:member)
+  const validRoles = ["org:owner", "org:member"];
   if (!validRoles.includes(roleId)) {
     throw new Error(`Invalid roleId. Must be one of: ${validRoles.join(", ")}`);
   }

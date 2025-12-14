@@ -10,8 +10,8 @@ import type { JwtPayload } from "../middleware/internal-auth";
 import { authorizationUseCase } from "./authorize";
 
 // Valid role IDs
-const VALID_ORG_ROLES = ["org:owner", "org:admin", "org:member"] as const;
-const VALID_WORKSPACE_ROLES = ["workspace:admin", "workspace:member", "workspace:viewer"] as const;
+const VALID_ORG_ROLES = ["org:owner", "org:member"] as const;
+const VALID_WORKSPACE_ROLES = ["workspace:owner", "workspace:member", "workspace:viewer"] as const;
 
 function isValidOrgRole(roleId: string): boolean {
   return (VALID_ORG_ROLES as readonly string[]).includes(roleId);
@@ -28,7 +28,7 @@ type ContextWithJwt = { get(key: "jwtPayload"): JwtPayload | undefined };
 
 const UpdateRoleRequestSchema = z
   .object({
-    roleId: z.string().openapi({ example: "workspace:admin" }),
+    roleId: z.string().openapi({ example: "workspace:owner" }),
   })
   .openapi("UpdateRoleRequest");
 
@@ -235,11 +235,11 @@ export const addWorkspaceMemberHandler: RouteHandler<typeof addWorkspaceMemberRo
   const { userId, roleId } = c.req.valid("json");
   const jwtPayload = (c as unknown as ContextWithJwt).get("jwtPayload");
 
-  // Authorization check: caller must have workspace:admin permission
+  // Authorization check: caller must have workspace:owner permission
   const authResult = await authorizationUseCase.execute({
     userId: jwtPayload?.sub ?? "",
     workspaceId,
-    permission: "workspace:admin",
+    permission: "workspace:owner",
     userRole: jwtPayload?.role,
   });
   if (!authResult.allowed) {
@@ -287,7 +287,7 @@ export const removeWorkspaceMemberHandler: RouteHandler<typeof removeWorkspaceMe
   const authResult = await authorizationUseCase.execute({
     userId: jwtPayload?.sub ?? "",
     workspaceId,
-    permission: "workspace:admin",
+    permission: "workspace:owner",
     userRole: jwtPayload?.role,
   });
   if (!authResult.allowed) {
@@ -336,7 +336,7 @@ export const updateWorkspaceMemberRoleHandler: RouteHandler<typeof updateWorkspa
   const authResult = await authorizationUseCase.execute({
     userId: jwtPayload?.sub ?? "",
     workspaceId,
-    permission: "workspace:admin",
+    permission: "workspace:owner",
     userRole: jwtPayload?.role,
   });
   if (!authResult.allowed) {

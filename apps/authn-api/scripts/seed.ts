@@ -5,8 +5,8 @@
  * Idempotency: Existing users are deleted and recreated
  *
  * Test scenarios:
- * - Permission testing for org:owner / org:admin / org:member
- * - Permission testing for workspace:admin / workspace:member / workspace:viewer
+ * - Permission testing for org:owner / org:member
+ * - Permission testing for workspace:owner / workspace:member / workspace:viewer
  * - Multi-tenant (multiple Organizations) isolation testing
  * - Access control testing for multiple Workspaces
  */
@@ -31,8 +31,8 @@ const ORG_1_WORKSPACE_1_ID = "00000000-0000-4000-a000-000000000002"; // Engineer
 const ORG_1_WORKSPACE_2_ID = "00000000-0000-4000-a000-000000000003"; // Marketing
 const ORG_2_WORKSPACE_1_ID = "00000000-0000-4000-a000-000000000011"; // Product
 
-type OrgRole = "org:owner" | "org:admin" | "org:member";
-type WorkspaceRole = "workspace:admin" | "workspace:member" | "workspace:viewer";
+type OrgRole = "org:owner" | "org:member";
+type WorkspaceRole = "workspace:owner" | "workspace:member" | "workspace:viewer";
 
 interface DemoUser {
   name: string;
@@ -77,24 +77,24 @@ const demoUsers: DemoUser[] = [
         organizationId: ORG_1_ID,
         orgRole: "org:owner",
         workspaces: [
-          { workspaceId: ORG_1_WORKSPACE_1_ID, role: "workspace:admin" },
-          { workspaceId: ORG_1_WORKSPACE_2_ID, role: "workspace:admin" },
+          { workspaceId: ORG_1_WORKSPACE_1_ID, role: "workspace:owner" },
+          { workspaceId: ORG_1_WORKSPACE_2_ID, role: "workspace:owner" },
         ],
       },
     ],
   },
-  // org-admin-1: Organization admin (manages Engineering only)
+  // org-owner-2: Organization owner (manages Engineering only)
   {
     name: "Bob Smith",
-    email: "org-admin-1@example.com",
+    email: "org-owner-2@example.com",
     password: PASSWORD,
     betterAuthRole: "user",
     memberships: [
       {
         organizationId: ORG_1_ID,
-        orgRole: "org:admin",
+        orgRole: "org:owner",
         workspaces: [
-          { workspaceId: ORG_1_WORKSPACE_1_ID, role: "workspace:admin" },
+          { workspaceId: ORG_1_WORKSPACE_1_ID, role: "workspace:owner" },
         ],
       },
     ],
@@ -135,18 +135,18 @@ const demoUsers: DemoUser[] = [
   // ========================================
   // Global Tech Inc Users (for multi-tenant testing)
   // ========================================
-  // org-admin-2: Administrator of another organization
+  // org-owner-3: Owner of another organization
   {
     name: "Eve Davis",
-    email: "org-admin-2@example.com",
+    email: "org-owner-3@example.com",
     password: PASSWORD,
     betterAuthRole: "user",
     memberships: [
       {
         organizationId: ORG_2_ID,
-        orgRole: "org:admin",
+        orgRole: "org:owner",
         workspaces: [
-          { workspaceId: ORG_2_WORKSPACE_1_ID, role: "workspace:admin" },
+          { workspaceId: ORG_2_WORKSPACE_1_ID, role: "workspace:owner" },
         ],
       },
     ],
@@ -154,25 +154,25 @@ const demoUsers: DemoUser[] = [
   // ========================================
   // Multi-Organization Users (for cross-org testing)
   // ========================================
-  // multi-org-admin: Admin in both organizations
+  // multi-org-owner: Owner in both organizations
   {
     name: "Frank Miller",
-    email: "multi-org-admin@example.com",
+    email: "multi-org-owner@example.com",
     password: PASSWORD,
     betterAuthRole: "user",
     memberships: [
       {
         organizationId: ORG_1_ID,
-        orgRole: "org:admin",
+        orgRole: "org:owner",
         workspaces: [
-          { workspaceId: ORG_1_WORKSPACE_1_ID, role: "workspace:admin" },
+          { workspaceId: ORG_1_WORKSPACE_1_ID, role: "workspace:owner" },
         ],
       },
       {
         organizationId: ORG_2_ID,
-        orgRole: "org:admin",
+        orgRole: "org:owner",
         workspaces: [
-          { workspaceId: ORG_2_WORKSPACE_1_ID, role: "workspace:admin" },
+          { workspaceId: ORG_2_WORKSPACE_1_ID, role: "workspace:owner" },
         ],
       },
     ],
@@ -342,16 +342,16 @@ async function seed() {
   console.log("  super-admin@example.com   role:admin   Can manage all Organizations/Workspaces");
   console.log("");
   console.log("Acme Corporation:");
-  console.log("  org-owner-1@example.com   org:owner    Engineering(admin), Marketing(admin)");
-  console.log("  org-admin-1@example.com   org:admin    Engineering(admin)");
+  console.log("  org-owner-1@example.com   org:owner    Engineering(owner), Marketing(owner)");
+  console.log("  org-owner-2@example.com   org:owner    Engineering(owner)");
   console.log("  ws-member-1@example.com   org:member   Engineering(member), Marketing(member)");
   console.log("  ws-viewer-1@example.com   org:member   Engineering(viewer)");
   console.log("");
   console.log("Global Tech Inc:");
-  console.log("  org-admin-2@example.com   org:admin    Product(admin)");
+  console.log("  org-owner-3@example.com   org:owner    Product(owner)");
   console.log("");
   console.log("Multi-Organization Users:");
-  console.log("  multi-org-admin@example.com   Acme(org:admin, Engineering), GlobalTech(org:admin, Product)");
+  console.log("  multi-org-owner@example.com   Acme(org:owner, Engineering/owner), GlobalTech(org:owner, Product/owner)");
   console.log("  multi-org-member@example.com  Acme(org:member, Eng/member, Mkt/viewer), GlobalTech(org:member, Product/member)");
 
   await closeDatabase();

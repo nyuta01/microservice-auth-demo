@@ -247,16 +247,16 @@ app.openapi(createDocumentRoute, async (c) => {
     throw new Error("Unauthorized: User not authenticated");
   }
 
-  // Authorization check: 'workspace:document:write'
+  // Authorization check: 'workspace:document:create'
   const isAllowed = await checkPermission({
     userId: user.sub,
     workspaceId,
-    permission: "workspace:document:write",
+    permission: "workspace:document:create",
     token,
   });
 
   if (!isAllowed) {
-    throw new Error("Forbidden: You do not have workspace:document:write permission");
+    throw new Error("Forbidden: You do not have workspace:document:create permission");
   }
 
   const body = c.req.valid("json");
@@ -317,16 +317,41 @@ app.openapi(updateDocumentRoute, async (c) => {
   const { id: documentId } = c.req.valid("param");
   const token = c.req.header("Authorization")?.replace("Bearer ", "");
 
-  // Authorization check: 'workspace:document:write'
-  const isAllowed = await checkPermission({
+  // Get the document first to check ownership
+  const existingDocument = await db
+    .select()
+    .from(documents)
+    .where(and(eq(documents.id, documentId), eq(documents.workspaceId, workspaceId)))
+    .limit(1);
+
+  if (!existingDocument[0]) {
+    throw new Error("Document not found");
+  }
+
+  // Authorization check: try :all first, then :own with ownership verification
+  const hasAllPermission = await checkPermission({
     userId: user.sub,
     workspaceId,
-    permission: "workspace:document:write",
+    permission: "workspace:document:update:all",
     token,
   });
 
-  if (!isAllowed) {
-    throw new Error("Forbidden: You do not have workspace:document:write permission");
+  if (!hasAllPermission) {
+    // Check :own permission and verify ownership
+    const hasOwnPermission = await checkPermission({
+      userId: user.sub,
+      workspaceId,
+      permission: "workspace:document:update:own",
+      token,
+    });
+
+    if (!hasOwnPermission) {
+      throw new Error("Forbidden: You do not have workspace:document:update permission");
+    }
+
+    if (existingDocument[0].createdBy !== user.sub) {
+      throw new Error("Forbidden: You can only update documents you created");
+    }
   }
 
   const body = c.req.valid("json");
@@ -387,16 +412,41 @@ app.openapi(deleteDocumentRoute, async (c) => {
   const { id: documentId } = c.req.valid("param");
   const token = c.req.header("Authorization")?.replace("Bearer ", "");
 
-  // Authorization check: 'workspace:document:delete'
-  const isAllowed = await checkPermission({
+  // Get the document first to check ownership
+  const existingDocument = await db
+    .select()
+    .from(documents)
+    .where(and(eq(documents.id, documentId), eq(documents.workspaceId, workspaceId)))
+    .limit(1);
+
+  if (!existingDocument[0]) {
+    throw new Error("Document not found");
+  }
+
+  // Authorization check: try :all first, then :own with ownership verification
+  const hasAllPermission = await checkPermission({
     userId: user.sub,
     workspaceId,
-    permission: "workspace:document:delete",
+    permission: "workspace:document:delete:all",
     token,
   });
 
-  if (!isAllowed) {
-    throw new Error("Forbidden: You do not have workspace:document:delete permission");
+  if (!hasAllPermission) {
+    // Check :own permission and verify ownership
+    const hasOwnPermission = await checkPermission({
+      userId: user.sub,
+      workspaceId,
+      permission: "workspace:document:delete:own",
+      token,
+    });
+
+    if (!hasOwnPermission) {
+      throw new Error("Forbidden: You do not have workspace:document:delete permission");
+    }
+
+    if (existingDocument[0].createdBy !== user.sub) {
+      throw new Error("Forbidden: You can only delete documents you created");
+    }
   }
 
   const [deletedDocument] = await db

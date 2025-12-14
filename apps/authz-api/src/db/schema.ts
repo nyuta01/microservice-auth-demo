@@ -26,7 +26,7 @@ export const workspaces = pgTable("workspaces", {
 // Roles
 // ------------------------------------------------
 export const roles = pgTable("roles", {
-  id: text("id").primaryKey(), // 'workspace:admin', 'workspace:member', 'org:admin', etc.
+  id: text("id").primaryKey(), // 'workspace:owner', 'workspace:member', 'org:owner', etc.
   name: text("name").notNull(),
 });
 
@@ -68,7 +68,7 @@ export const organizationMembers = pgTable(
       .notNull(),
     roleId: text("role_id")
       .references(() => roles.id)
-      .notNull(), // 'org:owner', 'org:admin', 'org:member'
+      .notNull(), // 'org:owner', 'org:member'
     joinedAt: timestamp("joined_at").defaultNow(),
   },
   (t) => ({

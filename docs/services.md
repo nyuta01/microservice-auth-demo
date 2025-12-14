@@ -127,7 +127,7 @@ if (permission.startsWith("org:")) {
 **Role**: Organization/Workspace integrated management API
 
 **Target Users**:
-- Users with `org:owner` / `org:admin` role
+- Users with `org:owner` role
 - Super Admin (`user.role = 'admin'`)
 
 **Main Endpoints**:
@@ -151,7 +151,7 @@ if (permission.startsWith("org:")) {
 **Role**: Organization/Workspace management console
 
 **Target Users**:
-- Users with `org:owner` / `org:admin` role
+- Users with `org:owner` role
 - Super Admin
 
 **Main Pages**:

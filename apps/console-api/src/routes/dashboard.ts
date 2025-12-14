@@ -58,7 +58,7 @@ dashboard.get("/", async (c) => {
     throw new Error("X-Workspace-ID header is required");
   }
 
-  // Permission check: workspace:admin or workspace:task:read
+  // Permission check: workspace:owner or workspace:task:read
   const isAllowed = await checkPermission({
     userId: user.sub,
     workspaceId,

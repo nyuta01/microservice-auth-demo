@@ -62,7 +62,7 @@ const WorkspaceResponseSchema = z
 const WorkspaceMemberSchema = z
   .object({
     userId: z.string().openapi({ example: "user123" }),
-    roleId: z.string().openapi({ example: "workspace:admin" }),
+    roleId: z.string().openapi({ example: "workspace:owner" }),
     roleName: z.string().openapi({ example: "Workspace Admin" }),
     joinedAt: z.string().datetime().openapi({ example: "2024-01-01T00:00:00Z" }),
   })
@@ -106,11 +106,11 @@ export const getWorkspaceMembersHandler: RouteHandler<typeof getWorkspaceMembers
   const { workspaceId } = c.req.valid("param");
   const jwtPayload = (c as unknown as ContextWithJwt).get("jwtPayload");
 
-  // Authorization check: workspace:admin permission required
+  // Authorization check: workspace:owner permission required
   const authResult = await authorizationUseCase.execute({
     userId: jwtPayload?.sub ?? "",
     workspaceId,
-    permission: "workspace:admin",
+    permission: "workspace:owner",
     userRole: jwtPayload?.role,
   });
   if (!authResult.allowed) {
@@ -195,12 +195,12 @@ export const createWorkspaceHandler: RouteHandler<typeof createWorkspaceRoute> =
     throw new Error("Failed to create workspace");
   }
 
-  // Add creator as workspace:admin
+  // Add creator as workspace:owner
   if (createdBy) {
     await db.insert(workspaceMembers).values({
       userId: createdBy,
       workspaceId: workspace.id,
-      roleId: "workspace:admin",
+      roleId: "workspace:owner",
     });
   }
 
@@ -249,11 +249,11 @@ export const updateWorkspaceHandler: RouteHandler<typeof updateWorkspaceRoute> =
   const { name } = c.req.valid("json");
   const jwtPayload = (c as unknown as ContextWithJwt).get("jwtPayload");
 
-  // Authorization check: workspace:admin permission required
+  // Authorization check: workspace:owner permission required
   const authResult = await authorizationUseCase.execute({
     userId: jwtPayload?.sub ?? "",
     workspaceId,
-    permission: "workspace:admin",
+    permission: "workspace:owner",
     userRole: jwtPayload?.role,
   });
   if (!authResult.allowed) {
@@ -309,11 +309,11 @@ export const deleteWorkspaceHandler: RouteHandler<typeof deleteWorkspaceRoute> =
   const { id: workspaceId } = c.req.valid("param");
   const jwtPayload = (c as unknown as ContextWithJwt).get("jwtPayload");
 
-  // Authorization check: workspace:admin permission required
+  // Authorization check: workspace:owner permission required
   const authResult = await authorizationUseCase.execute({
     userId: jwtPayload?.sub ?? "",
     workspaceId,
-    permission: "workspace:admin",
+    permission: "workspace:owner",
     userRole: jwtPayload?.role,
   });
   if (!authResult.allowed) {
@@ -349,7 +349,7 @@ const WorkspaceInfoSchema = z
   .object({
     workspaceId: z.uuid().openapi({ example: "00000000-0000-0000-0000-000000000001" }),
     workspaceName: z.string().openapi({ example: "Workspace Name" }),
-    roleId: z.string().openapi({ example: "workspace:admin" }),
+    roleId: z.string().openapi({ example: "workspace:owner" }),
     roleName: z.string().openapi({ example: "Workspace Admin" }),
     joinedAt: z.string().datetime().openapi({ example: "2024-01-01T00:00:00Z" }),
   })

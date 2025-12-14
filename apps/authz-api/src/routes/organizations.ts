@@ -22,8 +22,8 @@ const OrganizationIdParamSchema = z.object({
 const OrganizationMemberSchema = z
   .object({
     userId: z.string().openapi({ example: "user123" }),
-    roleId: z.string().openapi({ example: "org:admin" }),
-    roleName: z.string().openapi({ example: "Organization Admin" }),
+    roleId: z.string().openapi({ example: "org:owner" }),
+    roleName: z.string().openapi({ example: "Organization Owner" }),
     joinedAt: z.string().datetime().openapi({ example: "2024-01-01T00:00:00Z" }),
   })
   .openapi("OrganizationMember");
@@ -101,8 +101,8 @@ const WorkspaceInfoSchema = z
   .object({
     workspaceId: z.uuid().openapi({ example: "00000000-0000-0000-0000-000000000001" }),
     workspaceName: z.string().openapi({ example: "Workspace Name" }),
-    roleId: z.string().openapi({ example: "workspace:admin" }),
-    roleName: z.string().openapi({ example: "Workspace Admin" }),
+    roleId: z.string().openapi({ example: "workspace:owner" }),
+    roleName: z.string().openapi({ example: "Workspace Owner" }),
     joinedAt: z.string().datetime().openapi({ example: "2024-01-01T00:00:00Z" }),
   })
   .openapi("WorkspaceInfoForOrg");

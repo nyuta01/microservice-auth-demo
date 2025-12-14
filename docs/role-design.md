@@ -38,19 +38,12 @@ Managed in AuthZ API's `organization_members` table.
 | Role ID | Role Name | Description | Console Access |
 |---------|-----------|-------------|----------------|
 | `org:owner` | Organization Owner | Organization owner (full permissions) | Allowed |
-| `org:admin` | Organization Administrator | Organization admin | Allowed |
 | `org:member` | Organization Member | Organization member | Not allowed |
 
 ### Permission Mapping
 
 ```
 org:owner
-├── org:manage      # Organization management (Console access)
-├── org:users       # User management
-├── org:workspaces  # Workspace management (all WS access)
-└── org:settings    # Organization settings
-
-org:admin
 ├── org:manage      # Organization management (Console access)
 ├── org:users       # User management
 ├── org:workspaces  # Workspace management (all WS access)
@@ -65,7 +58,6 @@ org:member
 Only users with `org:manage` permission can access Console Web/API:
 
 - `org:owner` → Console access allowed
-- `org:admin` → Console access allowed
 - `org:member` → Console access not allowed (can only use Task Web/Document Web)
 
 ## 3. Workspace Roles
@@ -74,33 +66,47 @@ Managed in AuthZ API's `workspace_members` table.
 
 | Role ID | Role Name | Description |
 |---------|-----------|-------------|
-| `workspace:admin` | Workspace Administrator | Full workspace permissions |
-| `workspace:member` | Workspace Member | Read/write permissions |
+| `workspace:owner` | Workspace Owner | Full workspace permissions |
+| `workspace:member` | Workspace Member | Read/write own resources |
 | `workspace:viewer` | Workspace Viewer | Read only |
 
 ### Permission Mapping
 
 ```
-workspace:admin
-├── workspace:admin           # WS admin permission
-├── workspace:task:read       # Read tasks
-├── workspace:task:write      # Create/update tasks
-├── workspace:task:delete     # Delete tasks
-├── workspace:task:assign     # Assign tasks
-├── workspace:document:read   # Read documents
-├── workspace:document:write  # Create/update documents
-├── workspace:document:delete # Delete documents
-├── workspace:schedule:read   # Read schedules
-├── workspace:schedule:write  # Create/update schedules
-└── workspace:schedule:delete # Delete schedules
+workspace:owner
+├── workspace:owner                # WS owner permission
+├── workspace:task:read            # Read all tasks
+├── workspace:task:create          # Create tasks
+├── workspace:task:update:own      # Update own tasks
+├── workspace:task:update:all      # Update all tasks
+├── workspace:task:delete:own      # Delete own tasks
+├── workspace:task:delete:all      # Delete all tasks
+├── workspace:document:read        # Read all documents
+├── workspace:document:create      # Create documents
+├── workspace:document:update:own  # Update own documents
+├── workspace:document:update:all  # Update all documents
+├── workspace:document:delete:own  # Delete own documents
+├── workspace:document:delete:all  # Delete all documents
+├── workspace:schedule:read        # Read all schedules
+├── workspace:schedule:create      # Create schedules
+├── workspace:schedule:update:own  # Update own schedules
+├── workspace:schedule:update:all  # Update all schedules
+├── workspace:schedule:delete:own  # Delete own schedules
+└── workspace:schedule:delete:all  # Delete all schedules
 
 workspace:member
 ├── workspace:task:read
-├── workspace:task:write
+├── workspace:task:create
+├── workspace:task:update:own      # Can only update own tasks
+├── workspace:task:delete:own      # Can only delete own tasks
 ├── workspace:document:read
-├── workspace:document:write
+├── workspace:document:create
+├── workspace:document:update:own
+├── workspace:document:delete:own
 ├── workspace:schedule:read
-└── workspace:schedule:write
+├── workspace:schedule:create
+├── workspace:schedule:update:own
+└── workspace:schedule:delete:own
 
 workspace:viewer
 ├── workspace:task:read
@@ -118,13 +124,13 @@ workspace:viewer
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
-│ Organization Roles (org:owner / org:admin)                  │
+│ Organization Roles (org:owner)                              │
 │   → org:workspaces grants access to all WS in organization  │
 │   → org:manage grants Console access                        │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
-│ Workspace Roles (workspace:admin / workspace:member)        │
+│ Workspace Roles (workspace:owner / workspace:member)        │
 │   → Permissions within specific Workspace                   │
 │   → Operate resources in Task Web / Document Web            │
 └─────────────────────────────────────────────────────────────┘
@@ -150,7 +156,7 @@ CREATE TABLE "user" (
 ```sql
 -- roles table
 CREATE TABLE roles (
-  id TEXT PRIMARY KEY,  -- 'org:owner', 'workspace:admin', etc.
+  id TEXT PRIMARY KEY,  -- 'org:owner', 'workspace:owner', etc.
   name TEXT NOT NULL
 );
 
@@ -191,9 +197,8 @@ Role data inserted by seed script:
 ```typescript
 const rolesData = [
   { id: "org:owner", name: "Organization Owner" },
-  { id: "org:admin", name: "Organization Administrator" },
   { id: "org:member", name: "Organization Member" },
-  { id: "workspace:admin", name: "Workspace Administrator" },
+  { id: "workspace:owner", name: "Workspace Owner" },
   { id: "workspace:member", name: "Workspace Member" },
   { id: "workspace:viewer", name: "Workspace Viewer" },
 ];
@@ -210,10 +215,10 @@ user.role = 'admin'
   → Manages users and organizations in System Admin Web
 ```
 
-### Case 2: Organization admin manages organization
+### Case 2: Organization owner manages organization
 
 ```
-organization_members.role_id = 'org:admin'
+organization_members.role_id = 'org:owner'
   → Access Console Web via org:manage permission
   → Access all Workspaces in organization via org:workspaces permission
   → Can create/delete Workspaces, manage members
@@ -226,7 +231,7 @@ organization_members.role_id = 'org:member'
 workspace_members.role_id = 'workspace:member'
   → Cannot access Console Web
   → Operates resources in assigned WS via Task Web / Document Web
-  → Can read/write (cannot delete)
+  → Can read/create and update/delete own resources
 ```
 
 ### Case 4: View-only user

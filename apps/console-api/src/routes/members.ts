@@ -208,7 +208,7 @@ members.get("/workspace/:workspaceId", async (c) => {
   const isAllowed = await checkPermission({
     userId: user.sub,
     workspaceId,
-    permission: "workspace:admin",
+    permission: "workspace:owner",
     token,
   });
 
@@ -251,7 +251,7 @@ members.post("/workspace/:workspaceId", async (c) => {
   const isAllowed = await checkPermission({
     userId: user.sub,
     workspaceId,
-    permission: "workspace:admin",
+    permission: "workspace:owner",
     token,
   });
 
@@ -288,7 +288,7 @@ members.delete("/workspace/:workspaceId/:userId", async (c) => {
   const isAllowed = await checkPermission({
     userId: user.sub,
     workspaceId,
-    permission: "workspace:admin",
+    permission: "workspace:owner",
     token,
   });
 
@@ -321,7 +321,7 @@ members.put("/workspace/:workspaceId/:userId/role", async (c) => {
   const isAllowed = await checkPermission({
     userId: user.sub,
     workspaceId,
-    permission: "workspace:admin",
+    permission: "workspace:owner",
     token,
   });
 

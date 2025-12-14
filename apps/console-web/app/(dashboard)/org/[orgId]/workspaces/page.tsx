@@ -213,7 +213,7 @@ export default function WorkspacesPage() {
                         Document
                       </a>
                     </Button>
-                    {workspace.roleId === "workspace:admin" && (
+                    {workspace.roleId === "workspace:owner" && (
                       <Button
                         variant="ghost"
                         size="sm"

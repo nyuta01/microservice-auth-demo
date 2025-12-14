@@ -38,7 +38,7 @@ See the [README.md](../README.md) in the root directory for detailed setup instr
 ### Admin Services
 | Service | API | Web | Role |
 |---------|-----|-----|------|
-| Console | 10200 | 20200 | Organization/Workspace management (for org:admin) |
+| Console | 10200 | 20200 | Organization/Workspace management (for org:owner) |
 | System Admin | 10201 | 20201 | System-wide management (for super-admin) |
 
 ## Role System
@@ -57,7 +57,6 @@ Managed in AuthZ API. Permission level within an Organization.
 | Role | Description | Console Access |
 |------|-------------|----------------|
 | `org:owner` | Organization owner | Allowed |
-| `org:admin` | Organization admin | Allowed |
 | `org:member` | Organization member | Not allowed (Workspace only) |
 
 ### Workspace Roles (workspace_members)
@@ -65,6 +64,6 @@ Managed in AuthZ API. Permission level within a Workspace.
 
 | Role | Description |
 |------|-------------|
-| `workspace:admin` | WS admin (full permissions) |
-| `workspace:member` | WS member (read/write) |
+| `workspace:owner` | WS owner (full permissions) |
+| `workspace:member` | WS member (read/write own resources) |
 | `workspace:viewer` | WS viewer (read only) |

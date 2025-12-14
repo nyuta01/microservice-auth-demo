@@ -257,16 +257,16 @@ app.openapi(createTaskRoute, async (c) => {
     throw new Error("Unauthorized: User not authenticated");
   }
 
-  // Authorization check: 'workspace:task:write'
+  // Authorization check: 'workspace:task:create'
   const isAllowed = await checkPermission({
     userId: user.sub,
     workspaceId,
-    permission: "workspace:task:write",
+    permission: "workspace:task:create",
     token,
   });
 
   if (!isAllowed) {
-    throw new Error("Forbidden: You do not have workspace:task:write permission");
+    throw new Error("Forbidden: You do not have workspace:task:create permission");
   }
 
   const body = c.req.valid("json");
@@ -348,16 +348,41 @@ app.openapi(updateTaskRoute, async (c) => {
   const { id: taskId } = c.req.valid("param");
   const token = c.req.header("Authorization")?.replace("Bearer ", "");
 
-  // Authorization check: 'workspace:task:write'
-  const isAllowed = await checkPermission({
+  // Get the task first to check ownership
+  const existingTask = await db
+    .select()
+    .from(tasks)
+    .where(and(eq(tasks.id, taskId), eq(tasks.workspaceId, workspaceId)))
+    .limit(1);
+
+  if (!existingTask[0]) {
+    throw new Error("Task not found");
+  }
+
+  // Authorization check: try :all first, then :own with ownership verification
+  const hasAllPermission = await checkPermission({
     userId: user.sub,
     workspaceId,
-    permission: "workspace:task:write",
+    permission: "workspace:task:update:all",
     token,
   });
 
-  if (!isAllowed) {
-    throw new Error("Forbidden: You do not have workspace:task:write permission");
+  if (!hasAllPermission) {
+    // Check :own permission and verify ownership
+    const hasOwnPermission = await checkPermission({
+      userId: user.sub,
+      workspaceId,
+      permission: "workspace:task:update:own",
+      token,
+    });
+
+    if (!hasOwnPermission) {
+      throw new Error("Forbidden: You do not have workspace:task:update permission");
+    }
+
+    if (existingTask[0].createdBy !== user.sub) {
+      throw new Error("Forbidden: You can only update tasks you created");
+    }
   }
 
   const body = c.req.valid("json");
@@ -444,16 +469,41 @@ app.openapi(deleteTaskRoute, async (c) => {
   const { id: taskId } = c.req.valid("param");
   const token = c.req.header("Authorization")?.replace("Bearer ", "");
 
-  // Authorization check: 'workspace:task:delete'
-  const isAllowed = await checkPermission({
+  // Get the task first to check ownership
+  const existingTask = await db
+    .select()
+    .from(tasks)
+    .where(and(eq(tasks.id, taskId), eq(tasks.workspaceId, workspaceId)))
+    .limit(1);
+
+  if (!existingTask[0]) {
+    throw new Error("Task not found");
+  }
+
+  // Authorization check: try :all first, then :own with ownership verification
+  const hasAllPermission = await checkPermission({
     userId: user.sub,
     workspaceId,
-    permission: "workspace:task:delete",
+    permission: "workspace:task:delete:all",
     token,
   });
 
-  if (!isAllowed) {
-    throw new Error("Forbidden: You do not have workspace:task:delete permission");
+  if (!hasAllPermission) {
+    // Check :own permission and verify ownership
+    const hasOwnPermission = await checkPermission({
+      userId: user.sub,
+      workspaceId,
+      permission: "workspace:task:delete:own",
+      token,
+    });
+
+    if (!hasOwnPermission) {
+      throw new Error("Forbidden: You do not have workspace:task:delete permission");
+    }
+
+    if (existingTask[0].createdBy !== user.sub) {
+      throw new Error("Forbidden: You can only delete tasks you created");
+    }
   }
 
   const [deletedTask] = await db
@@ -526,16 +576,41 @@ app.openapi(updateTaskStatusRoute, async (c) => {
   const { id: taskId } = c.req.valid("param");
   const token = c.req.header("Authorization")?.replace("Bearer ", "");
 
-  // Authorization check
-  const isAllowed = await checkPermission({
+  // Get the task first to check ownership
+  const existingTask = await db
+    .select()
+    .from(tasks)
+    .where(and(eq(tasks.id, taskId), eq(tasks.workspaceId, workspaceId)))
+    .limit(1);
+
+  if (!existingTask[0]) {
+    throw new Error("Task not found");
+  }
+
+  // Authorization check: try :all first, then :own with ownership verification
+  const hasAllPermission = await checkPermission({
     userId: user.sub,
     workspaceId,
-    permission: "workspace:task:write",
+    permission: "workspace:task:update:all",
     token,
   });
 
-  if (!isAllowed) {
-    throw new Error("Forbidden");
+  if (!hasAllPermission) {
+    // Check :own permission and verify ownership
+    const hasOwnPermission = await checkPermission({
+      userId: user.sub,
+      workspaceId,
+      permission: "workspace:task:update:own",
+      token,
+    });
+
+    if (!hasOwnPermission) {
+      throw new Error("Forbidden: You do not have workspace:task:update permission");
+    }
+
+    if (existingTask[0].createdBy !== user.sub) {
+      throw new Error("Forbidden: You can only update tasks you created");
+    }
   }
 
   const { status } = c.req.valid("json");
@@ -614,16 +689,41 @@ app.openapi(updateTaskAssignRoute, async (c) => {
   const { id: taskId } = c.req.valid("param");
   const token = c.req.header("Authorization")?.replace("Bearer ", "");
 
-  // Authorization check: 'workspace:task:assign'
-  const isAllowed = await checkPermission({
+  // Get the task first to check ownership
+  const existingTask = await db
+    .select()
+    .from(tasks)
+    .where(and(eq(tasks.id, taskId), eq(tasks.workspaceId, workspaceId)))
+    .limit(1);
+
+  if (!existingTask[0]) {
+    throw new Error("Task not found");
+  }
+
+  // Authorization check: try :all first, then :own with ownership verification
+  const hasAllPermission = await checkPermission({
     userId: user.sub,
     workspaceId,
-    permission: "workspace:task:assign",
+    permission: "workspace:task:update:all",
     token,
   });
 
-  if (!isAllowed) {
-    throw new Error("Forbidden");
+  if (!hasAllPermission) {
+    // Check :own permission and verify ownership
+    const hasOwnPermission = await checkPermission({
+      userId: user.sub,
+      workspaceId,
+      permission: "workspace:task:update:own",
+      token,
+    });
+
+    if (!hasOwnPermission) {
+      throw new Error("Forbidden: You do not have workspace:task:update permission");
+    }
+
+    if (existingTask[0].createdBy !== user.sub) {
+      throw new Error("Forbidden: You can only update tasks you created");
+    }
   }
 
   const { assigneeId } = c.req.valid("json");

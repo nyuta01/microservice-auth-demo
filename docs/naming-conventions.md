@@ -187,7 +187,6 @@ DELETE /api/schedules/:id
 ```typescript
 // ✅ Correct examples
 'org:owner'    // Organization owner
-'org:admin'    // Organization admin
 'org:member'   // Organization member
 ```
 
@@ -195,7 +194,7 @@ DELETE /api/schedules/:id
 
 ```typescript
 // ✅ Correct examples
-'workspace:admin'   // Workspace admin
+'workspace:owner'   // Workspace owner
 'workspace:member'  // Workspace member
 'workspace:viewer'  // Workspace viewer
 ```

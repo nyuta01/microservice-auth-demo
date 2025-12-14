@@ -245,7 +245,6 @@ export default function OrganizationDetailPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="org:member">Member</SelectItem>
-                    <SelectItem value="org:admin">Admin</SelectItem>
                     <SelectItem value="org:owner">Owner</SelectItem>
                   </SelectContent>
                 </Select>

@@ -50,7 +50,7 @@ NEXT_PUBLIC_CONSOLE_API_URL=http://localhost:10200
 1. Authenticate with AuthN API at `/login`
 2. Session management via better-auth client
 3. Attach JWT token to Console API requests
-4. Requires `org:admin` or `workspace:admin` permission
+4. Requires `org:owner` permission
 
 ## Tech Stack
 
