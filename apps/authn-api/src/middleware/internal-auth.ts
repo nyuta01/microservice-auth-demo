@@ -1,6 +1,10 @@
 import { createMiddleware } from "hono/factory";
 
-const EXPECTED_SECRET = process.env.INTERNAL_API_SECRET || "internal_shared_secret_key";
+const EXPECTED_SECRET = process.env.INTERNAL_API_SECRET;
+
+if (!EXPECTED_SECRET) {
+  throw new Error("INTERNAL_API_SECRET environment variable is required");
+}
 
 /**
  * Authentication middleware for internal API

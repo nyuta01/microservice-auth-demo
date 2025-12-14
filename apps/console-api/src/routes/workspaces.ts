@@ -31,14 +31,17 @@ const workspaces = new Hono<Env>();
 workspaces.get("/", async (c) => {
   const user = c.get("user");
   const organizationId = c.req.header("X-Organization-ID");
+  const token = c.req.header("Authorization")?.replace("Bearer ", "");
 
   if (!user?.sub) {
     throw new Error("Unauthorized");
   }
 
   // Get list of user's workspaces from AuthZ API
-  const data = await callAuthZApi<UserWorkspacesResponse>("/internal/user-workspaces", "POST", {
-    userId: user.sub,
+  const data = await callAuthZApi<UserWorkspacesResponse>("/internal/user-workspaces", {
+    method: "POST",
+    body: { userId: user.sub },
+    token,
   });
 
   // Filter by Organization ID (if specified)
@@ -80,10 +83,10 @@ workspaces.post("/", async (c) => {
   }
 
   // Create workspace via AuthZ API
-  const result = await callAuthZApi<WorkspaceResponse>("/internal/workspaces", "POST", {
-    name,
-    organizationId,
-    createdBy: user.sub,
+  const result = await callAuthZApi<WorkspaceResponse>("/internal/workspaces", {
+    method: "POST",
+    body: { name, organizationId, createdBy: user.sub },
+    token,
   });
 
   return c.json(result, 201);
@@ -115,7 +118,11 @@ workspaces.put("/:id", async (c) => {
   }
 
   // Update workspace via AuthZ API
-  const result = await callAuthZApi<WorkspaceResponse>(`/internal/workspaces/${workspaceId}`, "PUT", body);
+  const result = await callAuthZApi<WorkspaceResponse>(`/internal/workspaces/${workspaceId}`, {
+    method: "PUT",
+    body,
+    token,
+  });
   return c.json(result);
 });
 
@@ -144,7 +151,7 @@ workspaces.delete("/:id", async (c) => {
   }
 
   // Delete workspace via AuthZ API
-  await callAuthZApi(`/internal/workspaces/${workspaceId}`, "DELETE");
+  await callAuthZApi(`/internal/workspaces/${workspaceId}`, { method: "DELETE", token });
   return c.json({ message: "Workspace deleted successfully" });
 });
 

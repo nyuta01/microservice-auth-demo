@@ -29,8 +29,10 @@ organizations.get("/", async (c) => {
   }
 
   // Get list of user's organizations from AuthZ API
-  const data = await callAuthZApi<UserWorkspacesResponse>("/internal/user-workspaces", "POST", {
-    userId: user.sub,
+  const data = await callAuthZApi<UserWorkspacesResponse>("/internal/user-workspaces", {
+    method: "POST",
+    body: { userId: user.sub },
+    token,
   });
 
   // Filter only organizations with org:manage permission
@@ -84,8 +86,10 @@ organizations.get("/:organizationId", async (c) => {
   }
 
   // Get user's organization information from AuthZ API
-  const data = await callAuthZApi<UserWorkspacesResponse>("/internal/user-workspaces", "POST", {
-    userId: user.sub,
+  const data = await callAuthZApi<UserWorkspacesResponse>("/internal/user-workspaces", {
+    method: "POST",
+    body: { userId: user.sub },
+    token,
   });
 
   const org = data.organizations.find((o) => o.organizationId === organizationId);

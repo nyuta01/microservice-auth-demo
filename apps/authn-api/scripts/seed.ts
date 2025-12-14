@@ -151,6 +151,56 @@ const demoUsers: DemoUser[] = [
       },
     ],
   },
+  // ========================================
+  // Multi-Organization Users (for cross-org testing)
+  // ========================================
+  // multi-org-admin: Admin in both organizations
+  {
+    name: "Frank Miller",
+    email: "multi-org-admin@example.com",
+    password: PASSWORD,
+    betterAuthRole: "user",
+    memberships: [
+      {
+        organizationId: ORG_1_ID,
+        orgRole: "org:admin",
+        workspaces: [
+          { workspaceId: ORG_1_WORKSPACE_1_ID, role: "workspace:admin" },
+        ],
+      },
+      {
+        organizationId: ORG_2_ID,
+        orgRole: "org:admin",
+        workspaces: [
+          { workspaceId: ORG_2_WORKSPACE_1_ID, role: "workspace:admin" },
+        ],
+      },
+    ],
+  },
+  // multi-org-member: Member in both organizations with different roles
+  {
+    name: "Grace Lee",
+    email: "multi-org-member@example.com",
+    password: PASSWORD,
+    betterAuthRole: "user",
+    memberships: [
+      {
+        organizationId: ORG_1_ID,
+        orgRole: "org:member",
+        workspaces: [
+          { workspaceId: ORG_1_WORKSPACE_1_ID, role: "workspace:member" },
+          { workspaceId: ORG_1_WORKSPACE_2_ID, role: "workspace:viewer" },
+        ],
+      },
+      {
+        organizationId: ORG_2_ID,
+        orgRole: "org:member",
+        workspaces: [
+          { workspaceId: ORG_2_WORKSPACE_1_ID, role: "workspace:member" },
+        ],
+      },
+    ],
+  },
 ];
 
 async function createUser(userData: DemoUser): Promise<string> {
@@ -299,6 +349,10 @@ async function seed() {
   console.log("");
   console.log("Global Tech Inc:");
   console.log("  org-admin-2@example.com   org:admin    Product(admin)");
+  console.log("");
+  console.log("Multi-Organization Users:");
+  console.log("  multi-org-admin@example.com   Acme(org:admin, Engineering), GlobalTech(org:admin, Product)");
+  console.log("  multi-org-member@example.com  Acme(org:member, Eng/member, Mkt/viewer), GlobalTech(org:member, Product/member)");
 
   await closeDatabase();
 }

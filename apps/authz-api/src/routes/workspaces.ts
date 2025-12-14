@@ -2,6 +2,10 @@ import { type RouteHandler, createRoute, z } from "@hono/zod-openapi";
 import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { organizations, roles, workspaceMembers, workspaces } from "../db/schema";
+import type { JwtPayload } from "../middleware/internal-auth";
+import { authorizationUseCase } from "./authorize";
+
+type ContextWithJwt = { get(key: "jwtPayload"): JwtPayload | undefined };
 
 // Schema definitions
 const WorkspaceIdParamSchema = z.object({
@@ -100,6 +104,18 @@ export const getWorkspaceMembersRoute = createRoute({
 
 export const getWorkspaceMembersHandler: RouteHandler<typeof getWorkspaceMembersRoute> = async (c) => {
   const { workspaceId } = c.req.valid("param");
+  const jwtPayload = (c as unknown as ContextWithJwt).get("jwtPayload");
+
+  // Authorization check: workspace:admin permission required
+  const authResult = await authorizationUseCase.execute({
+    userId: jwtPayload?.sub ?? "",
+    workspaceId,
+    permission: "workspace:admin",
+    userRole: jwtPayload?.role,
+  });
+  if (!authResult.allowed) {
+    throw new Error("Forbidden: insufficient permissions");
+  }
 
   const members = await db
     .select({
@@ -153,6 +169,18 @@ export const createWorkspaceRoute = createRoute({
 
 export const createWorkspaceHandler: RouteHandler<typeof createWorkspaceRoute> = async (c) => {
   const { name, organizationId, createdBy } = c.req.valid("json");
+  const jwtPayload = (c as unknown as ContextWithJwt).get("jwtPayload");
+
+  // Authorization check: org:workspaces permission required
+  const authResult = await authorizationUseCase.execute({
+    userId: jwtPayload?.sub ?? "",
+    organizationId,
+    permission: "org:workspaces",
+    userRole: jwtPayload?.role,
+  });
+  if (!authResult.allowed) {
+    throw new Error("Forbidden: insufficient permissions");
+  }
 
   const result = await db
     .insert(workspaces)
@@ -219,6 +247,18 @@ export const updateWorkspaceRoute = createRoute({
 export const updateWorkspaceHandler: RouteHandler<typeof updateWorkspaceRoute> = async (c) => {
   const { id: workspaceId } = c.req.valid("param");
   const { name } = c.req.valid("json");
+  const jwtPayload = (c as unknown as ContextWithJwt).get("jwtPayload");
+
+  // Authorization check: workspace:admin permission required
+  const authResult = await authorizationUseCase.execute({
+    userId: jwtPayload?.sub ?? "",
+    workspaceId,
+    permission: "workspace:admin",
+    userRole: jwtPayload?.role,
+  });
+  if (!authResult.allowed) {
+    throw new Error("Forbidden: insufficient permissions");
+  }
 
   const [workspace] = await db
     .update(workspaces)
@@ -267,6 +307,18 @@ export const deleteWorkspaceRoute = createRoute({
 
 export const deleteWorkspaceHandler: RouteHandler<typeof deleteWorkspaceRoute> = async (c) => {
   const { id: workspaceId } = c.req.valid("param");
+  const jwtPayload = (c as unknown as ContextWithJwt).get("jwtPayload");
+
+  // Authorization check: workspace:admin permission required
+  const authResult = await authorizationUseCase.execute({
+    userId: jwtPayload?.sub ?? "",
+    workspaceId,
+    permission: "workspace:admin",
+    userRole: jwtPayload?.role,
+  });
+  if (!authResult.allowed) {
+    throw new Error("Forbidden: insufficient permissions");
+  }
 
   // First delete members (due to foreign key constraints)
   await db.delete(workspaceMembers).where(eq(workspaceMembers.workspaceId, workspaceId));

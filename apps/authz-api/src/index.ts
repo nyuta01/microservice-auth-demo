@@ -14,8 +14,14 @@ const app = new OpenAPIHono();
 app.use("*", cors(corsConfig));
 
 // Internal API authentication middleware
-// /internal/authorize also verifies JWT (Zero Trust: get role directly from JWT)
+// Routes that require JWT verification for authorization checks
 app.use("/internal/authorize", verifyInternalWithJwt);
+// Organization routes
+app.use("/internal/organizations", verifyInternalWithJwt);
+app.use("/internal/organizations/*", verifyInternalWithJwt);
+// Workspace routes (except user-workspaces)
+app.use("/internal/workspaces", verifyInternalWithJwt);
+app.use("/internal/workspaces/*", verifyInternalWithJwt);
 // Other internal APIs only require Internal Secret
 app.use("/internal/*", verifyInternalSecret);
 

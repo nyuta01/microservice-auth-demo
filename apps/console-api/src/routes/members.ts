@@ -66,7 +66,8 @@ members.get("/organization/:organizationId", async (c) => {
   }
 
   const data = await callAuthZApi<OrganizationMembersResponse>(
-    `/internal/organizations/${organizationId}/members`
+    `/internal/organizations/${organizationId}/members`,
+    { token }
   );
 
   // Get and merge user information
@@ -114,8 +115,7 @@ members.post("/organization/:organizationId", async (c) => {
 
   await callAuthZApi<SuccessResponse>(
     `/internal/organizations/${organizationId}/members`,
-    "POST",
-    { userId, roleId }
+    { method: "POST", body: { userId, roleId }, token }
   );
 
   return c.json({ success: true }, 201);
@@ -147,7 +147,7 @@ members.delete("/organization/:organizationId/:userId", async (c) => {
 
   await callAuthZApi<SuccessResponse>(
     `/internal/organizations/${organizationId}/members/${targetUserId}`,
-    "DELETE"
+    { method: "DELETE", token }
   );
 
   return c.json({ success: true });
@@ -185,8 +185,7 @@ members.put("/organization/:organizationId/:userId/role", async (c) => {
 
   await callAuthZApi<SuccessResponse>(
     `/internal/organizations/${organizationId}/members/${targetUserId}/role`,
-    "PUT",
-    { roleId }
+    { method: "PUT", body: { roleId }, token }
   );
 
   return c.json({ success: true });
@@ -218,7 +217,8 @@ members.get("/workspace/:workspaceId", async (c) => {
   }
 
   const data = await callAuthZApi<WorkspaceMembersResponse>(
-    `/internal/workspaces/${workspaceId}/members`
+    `/internal/workspaces/${workspaceId}/members`,
+    { token }
   );
 
   // Get and merge user information
@@ -266,8 +266,7 @@ members.post("/workspace/:workspaceId", async (c) => {
 
   await callAuthZApi<SuccessResponse>(
     `/internal/workspaces/${workspaceId}/members`,
-    "POST",
-    { userId, roleId }
+    { method: "POST", body: { userId, roleId }, token }
   );
 
   return c.json({ success: true }, 201);
@@ -299,7 +298,7 @@ members.delete("/workspace/:workspaceId/:userId", async (c) => {
 
   await callAuthZApi<SuccessResponse>(
     `/internal/workspaces/${workspaceId}/members/${targetUserId}`,
-    "DELETE"
+    { method: "DELETE", token }
   );
 
   return c.json({ success: true });
@@ -337,8 +336,7 @@ members.put("/workspace/:workspaceId/:userId/role", async (c) => {
 
   await callAuthZApi<SuccessResponse>(
     `/internal/workspaces/${workspaceId}/members/${targetUserId}/role`,
-    "PUT",
-    { roleId }
+    { method: "PUT", body: { roleId }, token }
   );
 
   return c.json({ success: true });

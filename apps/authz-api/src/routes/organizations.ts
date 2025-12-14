@@ -2,6 +2,10 @@ import { type RouteHandler, createRoute, z } from "@hono/zod-openapi";
 import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { organizationMembers, organizations, roles, workspaces } from "../db/schema";
+import type { JwtPayload } from "../middleware/internal-auth";
+import { authorizationUseCase } from "./authorize";
+
+type ContextWithJwt = { get(key: "jwtPayload"): JwtPayload | undefined };
 
 // Schema definitions
 const OrganizationIdParamSchema = z.object({
@@ -54,6 +58,18 @@ export const getOrganizationMembersRoute = createRoute({
 
 export const getOrganizationMembersHandler: RouteHandler<typeof getOrganizationMembersRoute> = async (c) => {
   const { organizationId } = c.req.valid("param");
+  const jwtPayload = (c as unknown as ContextWithJwt).get("jwtPayload");
+
+  // Authorization check: org:users permission required
+  const authResult = await authorizationUseCase.execute({
+    userId: jwtPayload?.sub ?? "",
+    organizationId,
+    permission: "org:users",
+    userRole: jwtPayload?.role,
+  });
+  if (!authResult.allowed) {
+    throw new Error("Forbidden: insufficient permissions");
+  }
 
   const members = await db
     .select({
@@ -125,6 +141,13 @@ export const getAllOrganizationsRoute = createRoute({
 });
 
 export const getAllOrganizationsHandler: RouteHandler<typeof getAllOrganizationsRoute> = async (c) => {
+  const jwtPayload = (c as unknown as ContextWithJwt).get("jwtPayload");
+
+  // Super-admin only
+  if (jwtPayload?.role !== "admin") {
+    throw new Error("Forbidden: super-admin only");
+  }
+
   // Retrieve all organizations
   const allOrgs = await db.select().from(organizations);
 

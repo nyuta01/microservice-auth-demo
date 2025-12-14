@@ -49,7 +49,7 @@ portal.get("/", async (c) => {
 
   // For super-admin, get all organizations
   if (user.role === "admin") {
-    const allOrgs = await callAuthZApi<UserWorkspacesResponse>("/internal/organizations", "GET");
+    const allOrgs = await callAuthZApi<UserWorkspacesResponse>("/internal/organizations", { token });
     return c.json({
       user: {
         id: user.sub,
@@ -62,8 +62,10 @@ portal.get("/", async (c) => {
   }
 
   // Get list of organizations and workspaces that the user belongs to
-  const data = await callAuthZApi<UserWorkspacesResponse>("/internal/user-workspaces", "POST", {
-    userId: user.sub,
+  const data = await callAuthZApi<UserWorkspacesResponse>("/internal/user-workspaces", {
+    method: "POST",
+    body: { userId: user.sub },
+    token,
   });
 
   // Filter only organizations with org:manage permission

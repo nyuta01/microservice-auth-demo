@@ -165,12 +165,38 @@ pnpm dev
 
 All passwords are `password`.
 
-| Email | Role | Description |
-|-------|------|-------------|
-| `super-admin@example.com` | admin | System administrator |
-| `org-owner-1@example.com` | org:owner | Acme Corporation owner |
-| `org-admin-1@example.com` | org:admin | Acme Corporation admin |
-| `ws-member-1@example.com` | org:member | Acme Corporation member |
+### System Administrator
+
+| Email | System Role | Description |
+|-------|-------------|-------------|
+| `super-admin@example.com` | admin | Can manage all Organizations/Workspaces |
+
+### Acme Corporation
+
+| Email | Name | Org Role | Workspace | Workspace Role |
+|-------|------|----------|-----------|----------------|
+| `org-owner-1@example.com` | Alice Johnson | org:owner | Engineering | workspace:admin |
+| | | | Marketing | workspace:admin |
+| `org-admin-1@example.com` | Bob Smith | org:admin | Engineering | workspace:admin |
+| `ws-member-1@example.com` | Carol White | org:member | Engineering | workspace:member |
+| | | | Marketing | workspace:member |
+| `ws-viewer-1@example.com` | David Brown | org:member | Engineering | workspace:viewer |
+
+### Global Tech Inc
+
+| Email | Name | Org Role | Workspace | Workspace Role |
+|-------|------|----------|-----------|----------------|
+| `org-admin-2@example.com` | Eve Davis | org:admin | Product | workspace:admin |
+
+### Multi-Organization Users
+
+| Email | Name | Organization | Org Role | Workspace | Workspace Role |
+|-------|------|--------------|----------|-----------|----------------|
+| `multi-org-admin@example.com` | Frank Miller | Acme Corp | org:admin | Engineering | workspace:admin |
+| | | Global Tech | org:admin | Product | workspace:admin |
+| `multi-org-member@example.com` | Grace Lee | Acme Corp | org:member | Engineering | workspace:member |
+| | | | | Marketing | workspace:viewer |
+| | | Global Tech | org:member | Product | workspace:member |
 
 ## Verification
 
